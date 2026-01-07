@@ -9,9 +9,9 @@ html, body {
     height: 100%;
     margin: 0;
     padding: 0;
-    font-family: Consolas, monospace;
     background-color: #121212;
     color: #e0e0e0;
+    font-family: Consolas, monospace;
 }
 
 body {
@@ -22,33 +22,32 @@ body {
 #container {
     display: flex;
     flex-direction: column;
-    flex: 1; /* füllt den gesamten Viewport */
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 10px;
+    height: 100%;
+    width: 100%;
     box-sizing: border-box;
 }
 
 #log {
-    background-color: #1e1e1e;
-    padding: 12px;
-    flex: 1; /* füllt den verfügbaren Raum oberhalb des Buttons */
+    background-color: #121212; /* gleich wie Body, kein Rand */
+    padding: 20px;
+    flex: 1; /* nimmt den gesamten Platz oberhalb des Buttons ein */
     overflow-y: auto;
-    border-radius: 8px;
     white-space: pre-wrap;
-    margin-bottom: 10px; /* Abstand zum Button */
+    font-size: 20px; /* größere Schrift für 1080p */
+    line-height: 1.4;
 }
 
 #btn {
     background-color: #d32f2f;
     color: white;
     border: none;
-    padding: 12px 30px;
-    font-size: 16px;
+    padding: 15px 40px;
+    font-size: 22px;
     font-weight: bold;
-    border-radius: 8px;
+    border-radius: 10px;
     cursor: pointer;
-    align-self: center; /* Button zentriert horizontal */
+    align-self: center; /* zentriert horizontal */
+    margin-bottom: 10px; /* kleiner Abstand unten */
 }
 
 #btn:disabled {
