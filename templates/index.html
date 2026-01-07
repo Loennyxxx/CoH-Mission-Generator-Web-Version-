@@ -3,7 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <title>NOMOS – Missionsgenerator</title>
+
+<!-- Stylesheet -->
 <link rel="stylesheet" href="/static/style.css">
+
+<!-- Favicon -->
+<link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+<link rel="icon" href="/static/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="/static/favicon.png">
+
 <style>
 html, body {
     height: 100%;
@@ -35,9 +43,16 @@ body {
     flex: 1; /* füllt den verfügbaren Platz */
     overflow-y: auto; /* nur Log scrollt bei Überlauf */
     white-space: pre-wrap;
-    font-size: 20px;
+    font-size: 20px; /* gut lesbar auf 1080p */
     line-height: 1.4;
     margin: 0;
+}
+
+#button-row {
+    display: flex;
+    justify-content: center;
+    gap: 10px; /* Abstand zwischen Buttons */
+    margin: 10px 0;
 }
 
 #btn {
@@ -49,12 +64,25 @@ body {
     font-weight: bold;
     border-radius: 10px;
     cursor: pointer;
-    align-self: center; /* Button zentriert unten */
-    margin: 10px 0; /* Abstand unten */
 }
 
 #btn:disabled {
     background-color: #a12a2a;
+    cursor: not-allowed;
+}
+
+#music-btn {
+    background-color: #4caf50; /* grün */
+    color: white;
+    border: none;
+    padding: 15px 20px;
+    font-size: 18px;
+    font-weight: bold;
+    border-radius: 10px;
+    cursor: pointer;
+}
+#music-btn:disabled {
+    opacity: 0.6;
     cursor: not-allowed;
 }
 </style>
@@ -66,17 +94,30 @@ body {
         <pre id="output">Nomos >> System bereit. Warte auf Missionsbefehl.</pre>
     </div>
 
-    <button id="btn">🚀 MISSION GENERIEREN</button>
+    <div id="button-row">
+        <button id="btn">🚀 MISSION GENERIEREN</button>
+        <button id="music-btn">🎵 Musik An</button>
+    </div>
 </div>
+
+<!-- Hintergrundmusik -->
+<audio id="bg-music" autoplay loop>
+    <source src="/static/audio/hochzeitsmarsch.mp3" type="audio/mpeg">
+    Dein Browser unterstützt kein Audio-Tag.
+</audio>
 
 <script>
 const output = document.getElementById("output");
 const btn = document.getElementById("btn");
+const musicBtn = document.getElementById("music-btn");
+const music = document.getElementById("bg-music");
+
+music.volume = 0.2; // leise Hintergrundmusik
 
 let polling = false;
 let lastScrollHeight = 0;
 
-// Button startet nur die Mission
+// Mission starten
 btn.onclick = async () => {
     if (btn.disabled) return;
 
@@ -84,11 +125,25 @@ btn.onclick = async () => {
     btn.textContent = "⏳ GENERIERT...";
 
     try {
+        // Autoplay-Probleme umgehen
+        music.play().catch(() => { /* falls Browser blockiert */ });
+
         await fetch("/start", { method: "POST" });
     } catch (err) {
         output.textContent += "\n[Client] Fehler beim Start der Mission.\n";
         btn.disabled = false;
         btn.textContent = "🚀 MISSION GENERIEREN";
+    }
+};
+
+// Musik ein-/ausschalten
+musicBtn.onclick = () => {
+    if (music.paused) {
+        music.play();
+        musicBtn.textContent = "🎵 Musik Aus";
+    } else {
+        music.pause();
+        musicBtn.textContent = "🎵 Musik An";
     }
 };
 
@@ -98,9 +153,7 @@ async function poll() {
         const res = await fetch("/logs");
         const data = await res.json();
 
-        // Automatisches Scrollen nur wenn neue Zeilen hinzugekommen
         const shouldScroll = output.scrollTop + output.clientHeight >= lastScrollHeight - 5;
-
         output.textContent = data.logs;
 
         if (shouldScroll) {
@@ -118,7 +171,7 @@ async function poll() {
         setTimeout(poll, 500);
     } catch (err) {
         output.textContent += "\n[Client] Verbindungsfehler.\n";
-        setTimeout(poll, 2000); // Retry
+        setTimeout(poll, 2000);
     }
 }
 
