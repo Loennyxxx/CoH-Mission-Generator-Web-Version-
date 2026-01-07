@@ -12,6 +12,7 @@ html, body {
     background-color: #121212;
     color: #e0e0e0;
     font-family: Consolas, monospace;
+    overflow-y: auto; /* Seite kann scrollen */
 }
 
 body {
@@ -22,19 +23,21 @@ body {
 #container {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    min-height: 100vh; /* Container füllt Viewport */
     width: 100%;
     box-sizing: border-box;
+    padding: 0;
 }
 
 #log {
-    background-color: #121212; /* gleich wie Body, kein Rand */
+    background-color: #121212; /* Textfeld ohne extra Rand */
     padding: 20px;
-    flex: 1; /* nimmt den gesamten Platz oberhalb des Buttons ein */
-    overflow-y: auto;
+    flex: 1; /* füllt den verfügbaren Platz */
+    overflow-y: auto; /* nur Log scrollt bei Überlauf */
     white-space: pre-wrap;
-    font-size: 20px; /* größere Schrift für 1080p */
+    font-size: 20px;
     line-height: 1.4;
+    margin: 0;
 }
 
 #btn {
@@ -46,8 +49,8 @@ body {
     font-weight: bold;
     border-radius: 10px;
     cursor: pointer;
-    align-self: center; /* zentriert horizontal */
-    margin-bottom: 10px; /* kleiner Abstand unten */
+    align-self: center; /* Button zentriert unten */
+    margin: 10px 0; /* Abstand unten */
 }
 
 #btn:disabled {
@@ -71,6 +74,7 @@ const output = document.getElementById("output");
 const btn = document.getElementById("btn");
 
 let polling = false;
+let lastScrollHeight = 0;
 
 // Button startet nur die Mission
 btn.onclick = async () => {
@@ -94,8 +98,16 @@ async function poll() {
         const res = await fetch("/logs");
         const data = await res.json();
 
+        // Automatisches Scrollen nur wenn neue Zeilen hinzugekommen
+        const shouldScroll = output.scrollTop + output.clientHeight >= lastScrollHeight - 5;
+
         output.textContent = data.logs;
-        output.scrollTop = output.scrollHeight;
+
+        if (shouldScroll) {
+            output.scrollTop = output.scrollHeight;
+        }
+
+        lastScrollHeight = output.scrollHeight;
 
         // Button wieder aktivieren, wenn Mission fertig
         if (!data.running) {
