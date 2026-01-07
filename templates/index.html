@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>NOMOS – Missionsgenerator</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div id="container">
+    <div id="log">
+        <pre id="output">Nomos >> System bereit. Warte auf Missionsbefehl.</pre>
+    </div>
+
+    <button id="btn">🚀 MISSION GENERIEREN</button>
+</div>
+
+<script>
+const output = document.getElementById("output");
+const btn = document.getElementById("btn");
+
+let polling = false;
+
+btn.onclick = async () => {
+    if (polling) return;
+
+    btn.disabled = true;
+    btn.textContent = "⏳ GENERIERT...";
+    output.textContent = "";
+
+    await fetch("/start", { method: "POST" });
+    polling = true;
+    poll();
+};
+
+async function poll() {
+    try {
+        const res = await fetch("/logs");
+        const data = await res.json();
+
+        output.textContent = data.logs;
+        output.scrollTop = output.scrollHeight;
+
+        if (data.running) {
+            setTimeout(poll, 500);
+        } else {
+            polling = false;
+            btn.disabled = false;
+            btn.textContent = "🚀 MISSION GENERIEREN";
+        }
+    } catch (err) {
+        output.textContent += "\n[Client] Verbindungsfehler.\n";
+        polling = false;
+        btn.disabled = false;
+        btn.textContent = "🚀 MISSION GENERIEREN";
+    }
+}
+</script>
+
+</body>
+</html>
