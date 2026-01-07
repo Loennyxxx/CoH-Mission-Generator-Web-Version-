@@ -4,6 +4,58 @@
 <meta charset="UTF-8">
 <title>NOMOS – Missionsgenerator</title>
 <link rel="stylesheet" href="/static/style.css">
+<style>
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: Consolas, monospace;
+    background-color: #121212;
+    color: #e0e0e0;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+#container {
+    display: flex;
+    flex-direction: column;
+    flex: 1; /* füllt den gesamten Viewport */
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+#log {
+    background-color: #1e1e1e;
+    padding: 12px;
+    flex: 1; /* füllt den verfügbaren Raum oberhalb des Buttons */
+    overflow-y: auto;
+    border-radius: 8px;
+    white-space: pre-wrap;
+    margin-bottom: 10px; /* Abstand zum Button */
+}
+
+#btn {
+    background-color: #d32f2f;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    align-self: center; /* Button zentriert horizontal */
+}
+
+#btn:disabled {
+    background-color: #a12a2a;
+    cursor: not-allowed;
+}
+</style>
 </head>
 <body>
 
@@ -21,18 +73,23 @@ const btn = document.getElementById("btn");
 
 let polling = false;
 
+// Button startet nur die Mission
 btn.onclick = async () => {
-    if (polling) return;
+    if (btn.disabled) return;
 
     btn.disabled = true;
     btn.textContent = "⏳ GENERIERT...";
-    output.textContent = "";
 
-    await fetch("/start", { method: "POST" });
-    polling = true;
-    poll();
+    try {
+        await fetch("/start", { method: "POST" });
+    } catch (err) {
+        output.textContent += "\n[Client] Fehler beim Start der Mission.\n";
+        btn.disabled = false;
+        btn.textContent = "🚀 MISSION GENERIEREN";
+    }
 };
 
+// Polling läuft immer, direkt beim Laden der Seite
 async function poll() {
     try {
         const res = await fetch("/logs");
@@ -41,20 +98,26 @@ async function poll() {
         output.textContent = data.logs;
         output.scrollTop = output.scrollHeight;
 
-        if (data.running) {
-            setTimeout(poll, 500);
-        } else {
-            polling = false;
+        // Button wieder aktivieren, wenn Mission fertig
+        if (!data.running) {
             btn.disabled = false;
             btn.textContent = "🚀 MISSION GENERIEREN";
         }
+
+        setTimeout(poll, 500);
     } catch (err) {
         output.textContent += "\n[Client] Verbindungsfehler.\n";
-        polling = false;
-        btn.disabled = false;
-        btn.textContent = "🚀 MISSION GENERIEREN";
+        setTimeout(poll, 2000); // Retry
     }
 }
+
+// Polling direkt beim Laden der Seite starten
+window.onload = () => {
+    if (!polling) {
+        polling = true;
+        poll();
+    }
+};
 </script>
 
 </body>
