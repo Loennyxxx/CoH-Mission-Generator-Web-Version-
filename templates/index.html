@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>NOMOS – Missionsgenerator</title>
+<title>Company of Heroes Missionsgenerator</title>
 
 <!-- Stylesheet -->
 <link rel="stylesheet" href="/static/style.css">
@@ -19,7 +19,7 @@ html, body {
     background-color: #121212;
     color: #e0e0e0;
     font-family: Consolas, monospace;
-    overflow-y: auto; /* Seite kann scrollen */
+    overflow: hidden; /* kein Page-Scroll, nur Log scrollt */
 }
 
 body {
@@ -30,19 +30,18 @@ body {
 #container {
     display: flex;
     flex-direction: column;
-    min-height: 100vh; /* Container füllt Viewport */
+    height: 100vh; /* gesamte Viewport-Höhe */
     width: 100%;
     box-sizing: border-box;
-    padding: 0;
 }
 
 #log {
-    background-color: #121212; /* Textfeld ohne extra Rand */
-    padding: 20px;
-    flex: 1; /* füllt den verfügbaren Platz */
-    overflow-y: auto; /* nur Log scrollt bei Überlauf */
+    background-color: #121212;
+    padding: 10px; /* minimal, keine extra Scrollbar */
+    flex: 1;
+    overflow-y: auto; /* nur Log scrollt */
     white-space: pre-wrap;
-    font-size: 20px; /* gut lesbar auf 1080p */
+    font-size: 20px;
     line-height: 1.4;
     margin: 0;
 }
@@ -50,8 +49,8 @@ body {
 #button-row {
     display: flex;
     justify-content: center;
-    gap: 10px; /* Abstand zwischen Buttons */
-    margin: 10px 0;
+    gap: 10px;
+    padding: 10px 0;
 }
 
 #btn {
@@ -71,7 +70,7 @@ body {
 }
 
 #music-btn {
-    background-color: #4caf50; /* grün */
+    background-color: #4caf50;
     color: white;
     border: none;
     padding: 15px 20px;
@@ -80,6 +79,7 @@ body {
     border-radius: 10px;
     cursor: pointer;
 }
+
 #music-btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
@@ -111,7 +111,7 @@ const btn = document.getElementById("btn");
 const musicBtn = document.getElementById("music-btn");
 const music = document.getElementById("bg-music");
 
-music.volume = 0.2; // leise Hintergrundmusik
+music.volume = 0.2;
 
 let polling = false;
 let lastScrollHeight = 0;
@@ -124,8 +124,7 @@ btn.onclick = async () => {
     btn.textContent = "⏳ GENERIERT...";
 
     try {
-        // Autoplay-Probleme umgehen
-        music.play().catch(() => { /* falls Browser blockiert */ });
+        music.play().catch(() => {});
 
         await fetch("/start", { method: "POST" });
     } catch (err) {
@@ -135,7 +134,7 @@ btn.onclick = async () => {
     }
 };
 
-// Musik ein-/ausschalten
+// Musik an/aus
 musicBtn.onclick = () => {
     if (music.paused) {
         music.play();
@@ -146,7 +145,7 @@ musicBtn.onclick = () => {
     }
 };
 
-// Polling läuft immer, direkt beim Laden der Seite
+// Polling
 async function poll() {
     try {
         const res = await fetch("/logs");
@@ -161,20 +160,19 @@ async function poll() {
 
         lastScrollHeight = output.scrollHeight;
 
-        // Button wieder aktivieren, wenn Mission fertig
         if (!data.running) {
             btn.disabled = false;
             btn.textContent = "🚀 MISSION GENERIEREN";
         }
 
         setTimeout(poll, 500);
-    } catch (err) {
+    } catch {
         output.textContent += "\n[Client] Verbindungsfehler.\n";
         setTimeout(poll, 2000);
     }
 }
 
-// Polling direkt beim Laden der Seite starten
+// Start Polling
 window.onload = () => {
     if (!polling) {
         polling = true;
@@ -185,4 +183,3 @@ window.onload = () => {
 
 </body>
 </html>
-
